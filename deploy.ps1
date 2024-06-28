@@ -44,31 +44,3 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Log "Deployment successful. Application is running at http://localhost:5000"
-
-Dockerfile
-Create a Dockerfile in the super-service directory to package the .NET Core application.
-
-Dockerfile
-Copy code
-# Use the .NET Core runtime as the base image
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
-WORKDIR /app
-EXPOSE 80
-
-# Use the .NET SDK to build the application
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-WORKDIR /src
-COPY ["SuperService.Api/SuperService.Api.csproj", "SuperService.Api/"]
-RUN dotnet restore "SuperService.Api/SuperService.Api.csproj"
-COPY . .
-WORKDIR "/src/SuperService.Api"
-RUN dotnet build "SuperService.Api.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "SuperService.Api.csproj" -c Release -o /app/publish
-
-# Final stage: copy the build and run the application
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SuperService.Api.dll"]
